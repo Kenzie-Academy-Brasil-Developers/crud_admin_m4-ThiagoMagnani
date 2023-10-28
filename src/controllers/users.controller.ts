@@ -1,25 +1,18 @@
 import { Request, Response } from "express";
-import { getCoursesUserServices, getUserServices, postUserServices } from "../services/users.services";
-import { ZodError } from "zod";
+import { createUserService, getCoursesUserServices, getUserServices } from "../services/users.services";
+import { UserRead, userCreate } from "../interfaces/users.interfaces";
 
-export const postUserController = async (req: Request, res: Response) => {
-    try {
-        const response = await postUserServices(req.body);
-        return res.status(201).json(response);
-    } catch (error: unknown) {
-        if (error instanceof ZodError) {
-            return res.status(400).json({ message: "Invalid user data" });
-        }
-        return res.status(500).json({ message: "Internal Server Error" });
-    }
+export const postUserController = async (req: Request, res: Response): Promise<Response> => {
+    const response: userCreate = await createUserService(req.body);
+    return res.status(201).json(response);
 }
 
-export const getUserController = async (req: Request, res: Response) => {
-    const response = await getUserServices(req.params.id);
+export const getUserController = async (req: Request, res: Response): Promise<Response> => {
+    const response: UserRead = await getUserServices(req.params.id);
     return res.status(200).json(response);
 };
 
-export const getCoursesUserController = async (req: Request, res: Response) => {
+export const getCoursesUserController = async (req: Request, res: Response): Promise<Response> => {
     const response = await getCoursesUserServices(req.params.id);
     return res.status(200).json(response);
 };

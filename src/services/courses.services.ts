@@ -1,34 +1,24 @@
-import { QueryConfig, QueryResult } from "pg";
 import { client } from "../database";
-import { courses } from "../interfaces/courses.interfaces";
-import { courseSchema } from "../schemas/courses.schema";
+import { courseRead, courseResult, courses } from "../interfaces/courses.interfaces";
 import format from 'pg-format';
-import { TCourseCreate } from "../__tests__/mocks/interfaces";
+import { userCourses, userCoursesResult } from "../interfaces/userCourses.interfaces";
 
-export const postCourseServices = async (body: TCourseCreate) => {
-    const { name, description } = courseSchema.parse(body);
-    const queryString = format(`INSERT INTO courses (name, description) VALUES ($1, $2) RETURNING *;`);
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [name, description],
-    };
-    const data: QueryResult<courses> = await client.query(queryConfig);
-    return data.rows[0];
-}
-
-export const getCourseServices = async () => {
-    const queryString = `SELECT * FROM courses`;
-    const data: QueryResult<courses> = await client.query(queryString);
-    return data.rows;
+export const postCourseServices = async (payload: courses): Promise<courses> => {
+    const queryFormat: string = format(
+        `INSERT INTO courses (name, description) VALUES ($1, $2) RETURNING *;`);
+    const query: courseResult = await client.query(queryFormat,
+        [payload.name, payload.description]);
+    return query.rows[0];
 };
 
-export const deleteCoursesServices = async (id: string) => {
-    const queryString = `DELETE FROM courses WHERE id = $1;`;
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [id],
-    }
-    const data: QueryResult<courses> = await client.query(queryConfig);
-    await client.query(queryConfig);
-    return data.rows[0];
-}
+export const getCourseServices = async (): Promise<courseRead> => {
+    const query: courseResult = await client.query(`SELECT * FROM "userCourses";`);
+    return query.rows;
+};
+
+export const updateCourseService = async (courseId: string, userId: string): Promise<userCourses> => {
+    const queryFormat: string = format(
+        `UPDATE "userCourses" SET active = FALSE WHERE "courseId" = $1 AND "userId" = $2;`);
+    const query: userCoursesResult = await client.query(queryFormat, [courseId, userId]);
+    return query.rows[0];
+};

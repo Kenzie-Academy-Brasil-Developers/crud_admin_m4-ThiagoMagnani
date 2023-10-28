@@ -1,20 +1,18 @@
-import { QueryConfig, QueryResult } from "pg";
 import { client } from "../database";
 import format from "pg-format";
-import { userCourses } from "../interfaces/userCourses.interfaces";
+import { userCourses, userCoursesResult } from "../interfaces/userCourses.interfaces";
+import { AppError } from "../errors";
 
-export const postUserCourseServices = async (courseId: string, userId: string) => {
-    const queryString = format(`INSERT INTO "userCourses" ("userId", "courseId") VALUES ($1, $2) RETURNING *;`);
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [userId, courseId],
-    };
-    const data: QueryResult<userCourses> = await client.query(queryConfig);
-    return data.rows[0];
-}
+export const postUserCourseServices = async (userId: string, courseId: string): Promise<userCourses> => {
+    const queryFormat = format(
+        `INSERT INTO "userCourses" ("userId", "courseId") VALUES ($1, $2) RETURNING *;`);
+    const query: userCoursesResult = await client.query(queryFormat, 
+    [userId, courseId]);
+    return query.rows[0];
+};
 
 export const getUserCourseServices = async (id: string) => {
-    const queryString = `
+    const query: string = `
     SELECT 
     users.id AS "userId",
     users.name AS "userName",
@@ -25,14 +23,10 @@ export const getUserCourseServices = async (id: string) => {
     FROM users
     JOIN "userCourses" ON "userCourses"."userId" = users.id
     JOIN courses ON "userCourses"."courseId" = courses.id
-    WHERE courses.id = $1;`;
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [id],
-    };
-    const data: QueryResult<userCourses> = await client.query(queryConfig);
-    if (data.rows.length === 0) {
-        return null;
+    WHERE "courseId" = $1;`;
+    const queryResult: userCoursesResult = await client.query(query, [id]);
+    if (!queryResult.rowCount) {
+        throw new AppError("User/course not found", 404)
     }
-    return data.rows[0];
+    return queryResult.rows;
 };

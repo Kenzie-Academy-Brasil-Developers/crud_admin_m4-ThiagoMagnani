@@ -1,45 +1,42 @@
-import { QueryConfig, QueryResult } from "pg";
-import { users } from "../interfaces/users.interfaces";
+import { userCreate, UserRead, userResult } from "../interfaces/users.interfaces";
 import { client } from "../database";
-import { userSchema } from "../schemas/users.schema";
 import format from 'pg-format';
-import { hashSync } from "bcryptjs";
-import { TUserCreate } from "../__tests__/mocks/interfaces";
+import { userCoursesResult } from "../interfaces/userCourses.interfaces";
+import { hash } from "bcryptjs";
+import { AppError } from "../errors";
 
-export const postUserServices = async (body: TUserCreate) => {
-    body.password = hashSync(body.password, 12);
-    const { name, email, password, admin } = userSchema.parse(body);
-    const queryString = format(`INSERT INTO users (name, email, password, admin) VALUES ($1, $2, $3, $4) RETURNING *;`);
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [name, email, password, admin],
-    };
-    const data: QueryResult<users> = await client.query(queryConfig);
-    return data.rows[0];
-}
+export const createUserService = async (payload: userCreate): Promise<UserRead> => {
+    payload.password = await hash(payload.password, 10);
+    const queryFormat: string = format(
+        'INSERT INTO users (%I) VALUES (%L) RETURNING id, name, email, admin;',
+        Object.keys(payload),
+        Object.values(payload)
+    );
+    const query: userResult = await client.query(queryFormat);
+    return query.rows[0];
+};
 
-export const getUserServices = async (id: string) => {
-    const queryString = `SELECT name, email, password, admin FROM users WHERE id = $1;`;
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [id],
-    };
-    const data: QueryResult<users> = await client.query(queryConfig);
-    if (data.rows.length === 0) {
-        return null;
-    }
-    return data.rows[0];
+export const getUserServices = async (id: string): Promise<UserRead> => {
+    const query: userResult = await client.query(`SELECT name, email, password, admin FROM users WHERE id = $1;`, [id]);
+    return query.rows[0];
 };
 
 export const getCoursesUserServices = async (id: string) => {
-    const queryString = `SELECT * FROM "userCourses" WHERE id = $1;`;
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [id],
-    };
-    const data: QueryResult<users> = await client.query(queryConfig);
-    if (data.rows.length === 0) {
-        return null;
+    const query: string = `
+    SELECT 
+    courses.id AS "courseId",
+    courses.name AS "courseName",
+    courses.description AS "courseDescription",
+    "userCourses".active AS "userActiveInCourse",
+    users.id AS "userId",
+    users.name AS "userName"
+    FROM users
+    JOIN "userCourses" ON "userCourses"."userId" = users.id
+    JOIN courses ON "userCourses"."courseId" = courses.id
+    WHERE "userId" = $1;`;
+    const queryResult: userCoursesResult = await client.query(query, [id]);
+    if (!queryResult.rowCount) {
+        throw new AppError('No course found', 404)
     }
-    return data.rows[0];
+    return queryResult.rows;
 };

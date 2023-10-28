@@ -1,29 +1,30 @@
-import { QueryConfig } from "pg";
 import { client } from "../database";
 import { NextFunction, Request, Response } from "express";
+import { AppError } from "../errors";
+import { userResult } from "../interfaces/users.interfaces";
 
-export const userCourseExists = async (req: Request, res: Response, next: NextFunction) => {
-    const queryString = `SELECT * FROM "userCourses" WHERE "userId" = $1;`;
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [req.params.id],
-    };
-    const { rowCount } = await client.query(queryConfig);
-    if (rowCount > 0) {
-        return res.status(409).json({ message: "User/course not found" });
+export const userCourseExists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { userId } = req.params;
+    if (!userId) return next()
+    const result: userResult = await client.query(
+        `SELECT * FROM users WHERE id = $1;`,
+        [userId]
+    )
+    if (!result) {
+        throw new AppError("User/course not found", 409);
     }
-    return next();
+    return next()
 }
 
-export const CoursesUserExists = async (req: Request, res: Response, next: NextFunction) => {
-    const queryString = `SELECT * FROM "userCourses" WHERE "courseId" = $1;`;
-    const queryConfig: QueryConfig = {
-        text: queryString,
-        values: [req.params.id],
-    };
-    const { rowCount } = await client.query(queryConfig);
-    if (rowCount > 0) {
-        return res.status(409).json({ message: "No course found" });
+export const couseUsersExists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { curseId } = req.params;
+    if (!curseId) return next()
+    const result: userResult = await client.query(
+        `SELECT * FROM curses WHERE id = $1;`,
+        [curseId]
+    )
+    if (!result) {
+        throw new AppError("User/course not found", 409);
     }
-    return next();
+    return next()
 }

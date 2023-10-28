@@ -1,8 +1,8 @@
-export interface users {
-    id: number,
-    name: string,
-    email: string,
-    password: string,
-    admin: boolean,
-}
-export type usersBody = Omit<users, "id">;
+import { z } from "zod";
+import { userCreateSchema, userSchema } from "../schemas/users.schema";
+import { QueryResult } from "pg";
+
+export type users = z.infer<typeof userSchema>
+export type userCreate = z.infer<typeof userCreateSchema>;
+export type UserRead = z.infer<typeof userCreateSchema>;
+export type userResult = QueryResult<users>;
