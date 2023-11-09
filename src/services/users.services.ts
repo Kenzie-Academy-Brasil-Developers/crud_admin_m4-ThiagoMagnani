@@ -5,7 +5,7 @@ import { userCoursesResult } from "../interfaces/userCourses.interfaces";
 import { hash } from "bcryptjs";
 import { AppError } from "../errors";
 
-export const createUserService = async (payload: userCreate): Promise<UserRead> => {
+export const createUserService = async (payload: userCreate): Promise<userCreate> => {
     payload.password = await hash(payload.password, 10);
     const queryFormat: string = format(
         'INSERT INTO users (%I) VALUES (%L) RETURNING id, name, email, admin;',
@@ -16,9 +16,9 @@ export const createUserService = async (payload: userCreate): Promise<UserRead> 
     return query.rows[0];
 };
 
-export const getUserServices = async (id: string): Promise<UserRead> => {
-    const query: userResult = await client.query(`SELECT name, email, password, admin FROM users WHERE id = $1;`, [id]);
-    return query.rows[0];
+export const getUserServices = async (): Promise<UserRead[]> => {
+    const query: userResult = await client.query(`SELECT name, email, admin FROM users;`);
+    return query.rows;
 };
 
 export const getCoursesUserServices = async (id: string) => {

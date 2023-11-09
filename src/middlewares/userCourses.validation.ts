@@ -2,6 +2,7 @@ import { client } from "../database";
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errors";
 import { userResult } from "../interfaces/users.interfaces";
+import { courseResult } from "../interfaces/courses.interfaces";
 
 export const userCourseExists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { userId } = req.params;
@@ -10,21 +11,21 @@ export const userCourseExists = async (req: Request, res: Response, next: NextFu
         `SELECT * FROM users WHERE id = $1;`,
         [userId]
     )
-    if (!result) {
-        throw new AppError("User/course not found", 409);
+    if (!result.rowCount) {
+        throw new AppError("User/course not found", 404);
     }
     return next()
 }
 
 export const couseUsersExists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const { curseId } = req.params;
-    if (!curseId) return next()
-    const result: userResult = await client.query(
-        `SELECT * FROM curses WHERE id = $1;`,
-        [curseId]
+    const { courseId } = req.params;
+    if (!courseId) return next()
+    const result: courseResult = await client.query(
+        `SELECT * FROM courses WHERE id = $1;`,
+        [courseId]
     )
-    if (!result) {
-        throw new AppError("User/course not found", 409);
+    if (!result.rowCount) {
+        throw new AppError("User/course not found", 404);
     }
     return next()
 }

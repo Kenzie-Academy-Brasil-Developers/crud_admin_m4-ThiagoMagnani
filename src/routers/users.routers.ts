@@ -10,7 +10,7 @@ const usersRouter = Router();
 
 usersRouter.post("/", validateBody(userCreateSchema), isUserValidEmail, postUserController);
 usersRouter.use(verifyToken, userPermission);
-usersRouter.get("/:id", getUserController);
+usersRouter.get("/", getUserController);
 usersRouter.get("/:id/courses", getCoursesUserController);
 
 export default usersRouter;

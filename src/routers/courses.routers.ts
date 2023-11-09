@@ -10,10 +10,10 @@ import { validateBody } from "../middlewares/body.validation";
 const coursesRouter = Router();
 
 coursesRouter.get("/", getCourseController);
-coursesRouter.use(verifyToken, userPermission );
+coursesRouter.use(verifyToken, userPermission);
 coursesRouter.post("/", validateBody(courseSchema), postCourseController);
-coursesRouter.post("/:courseId/users/:userId", userCourseExists, postUserCourseController);
+coursesRouter.post("/:courseId/users/:userId", userCourseExists, couseUsersExists, postUserCourseController);
 coursesRouter.get("/:id/users", getUserCourseController);
-coursesRouter.delete("/:courseId/users/:userId", couseUsersExists, updateCourseController);
+coursesRouter.delete("/:courseId/users/:userId", userCourseExists, couseUsersExists, updateCourseController);
 
 export default coursesRouter;

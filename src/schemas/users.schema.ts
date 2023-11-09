@@ -5,7 +5,7 @@ export const userSchema = z.object({
     name: z.string(),
     email: z.string().email(),
     password: z.string(),
-    admin: z.boolean().default(true)
+    admin: z.boolean().default(true),
 });
 
 export const userLogin = userSchema.omit({ id: true, admin: true })

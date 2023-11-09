@@ -8,7 +8,7 @@ export const postUserController = async (req: Request, res: Response): Promise<R
 }
 
 export const getUserController = async (req: Request, res: Response): Promise<Response> => {
-    const response: UserRead = await getUserServices(req.params.id);
+    const response: UserRead[] = await getUserServices();
     return res.status(200).json(response);
 };
 
